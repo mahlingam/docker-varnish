@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:buster-slim
 
 ENV VARNISH_SIZE 100M
 
@@ -12,14 +12,16 @@ RUN set -e; \
     apt-get install -y --no-install-recommends $BASE_PKGS; \
     git clone https://github.com/varnishcache/pkg-varnish-cache.git; \
     cd pkg-varnish-cache; \
-    git checkout 10da6a585eb7d8defe9d273a51df5b133500eb6b; \
     rm -rf .git; \
-    curl -f https://varnish-cache.org/downloads/varnish-6.0.12.tgz -o $tmpdir/orig.tgz; \
-    echo "d80abb42380e85bc4be02278b3620b0a66d182465945146eecb2cdc022e77945ad815e897a5ed0bec2f458471617f647a80c743c0f72e73334ad92d3ac298af4  $tmpdir/orig.tgz" | sha512sum -c -; \
+    curl -f https://varnish-cache.org/downloads/varnish-4.0.5.tgz -o $tmpdir/orig.tgz; \
+    echo "a08259f6f9c6fffa188b26c1f8c630de5e6d2f6d52f6efa9d5d8239cdd8721c53e2be3379f8100efb537e74416eadd6c865f4cc687db1c5a9f757bb3f73abeda  $tmpdir/orig.tgz" | sha512sum -c -; \
     tar xavf $tmpdir/orig.tgz --strip 1; \
-    sed -i -e "s|@VERSION@|6.0.12|"  "debian/changelog"; \
+    sed -i -e "s|@VERSION@|4.0.5|"  "debian/changelog"; \
     mk-build-deps --install --tool="apt-get -o Debug::pkgProblemResolver=yes --yes" debian/control; \
     sed -i '' debian/varnish*; \
+    sed -i -e "s|usr/share/varnish/vsctool.py||" debian/varnish-dev.install; \
+    sed -i -e "s|usr/share/varnish/vcc||" debian/varnish.install; \
+    sed -i -e "s|usr/share/varnish/vcl||" debian/varnish.install; \
     dpkg-buildpackage -us -uc -j"$(nproc)"; \
     apt-get -y --no-install-recommends install ../*.deb; \
     apt-get -y purge --auto-remove varnish-build-deps $BASE_PKGS; \
